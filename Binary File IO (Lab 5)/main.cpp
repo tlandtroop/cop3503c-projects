@@ -2,180 +2,137 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "extrafile.h"
 using namespace std;
 
-struct Inventory
+int LoadShipFile(vector<Ship> &ships, string path, int counter)
 {
-    string name;
-    int weaponInt;
-    float weaponFloat;
-};
-
-struct Ship
-{
-    string name, ship_class;
-    short length;
-    int shieldCapacity;
-    float maxWarpSpeed;
-    vector<Inventory> inventory;
-};
-
-void DisplayShip(Ship &ship)
-{
-    int totalFirepower;
-    cout << "Name: " << ship.name << endl;
-    cout << "Class: " << ship.ship_class << endl;
-    cout << "Length: " << ship.length << endl;
-    cout << "Shield Capacity: " << ship.shieldCapacity << endl;
-    cout << "Maximum Warp: " << ship.maxWarpSpeed << endl;
-    cout << "Armaments: " << endl;
-
-    if (ship.inventory.size() != 0)
-    {
-        for (unsigned int i = 0; i < ship.inventory.size(); i++)
-        {
-            cout << ship.inventory.at(i).name << ", " << ship.inventory.at(i).weaponInt << ", " << ship.inventory.at(i).weaponFloat << endl;
-            totalFirepower += ship.inventory.at(i).weaponInt;
-        }
-    }
-    else
-    {
-        cout << "Unarmed" << endl;
-    }
-    cout << "Total firepower: " << totalFirepower << endl;
-    cout << endl;
-}
-
-void LoadShipFile(vector<Ship> &ships, int fileNumber)
-{
-    string path;
-    if (fileNumber == 1)
-    {
-        path == "./friendlyships.shp";
-    }
-    else if (fileNumber == 2)
-    {
-        path == "./enemyships.shp";
-    }
-
     ifstream File(path, ios_base::binary);
 
-    if (File.is_open())
+    unsigned int count;
+    File.read((char *)&count, sizeof(count));
+    for (unsigned int i = 0; i < count; i++)
     {
-        cout << "File has been opened";
-        int count;
-        File.read((char *)&count, 4);
+        // Read name string
+        string shipName;
+        unsigned int length;
+        File.read((char *)&length, sizeof(length));
 
-        for (int i = 0; i < count; i++)
+        char *temporary = new char[length];
+        File.read(temporary, length);
+        shipName = temporary;
+        delete[] temporary;
+
+        // Read class string
+        string shipClass;
+        File.read((char *)&length, sizeof(length));
+
+        temporary = new char[length];
+        File.read(temporary, length);
+        shipClass = temporary;
+        delete[] temporary;
+
+        // Read length, shield capacity, and max warp speed integers
+        short lengthShip;
+        File.read((char *)&lengthShip, sizeof(lengthShip));
+        int shieldCapacity;
+        File.read((char *)&shieldCapacity, sizeof(shieldCapacity));
+        float warpSpeed;
+        File.read((char *)&warpSpeed, sizeof(warpSpeed));
+
+        Ship ship(shipName, shipClass, lengthShip, shieldCapacity, warpSpeed);
+        ships.push_back(ship);
+
+        // Read inventory
+        unsigned int weaponCount;
+        File.read((char *)&weaponCount, sizeof(weaponCount));
+        for (unsigned int j = 0; j < weaponCount; j++)
         {
-            Ship ship;
-            int nameLen;
-            int weaponCount;
+            File.read((char *)&length, sizeof(length));
+            temporary = new char[length];
+            File.read(temporary, length);
+            string weaponName = temporary;
+            delete[] temporary;
 
-            File.read((char *)&nameLen, 4);
+            int weaponInt;
+            File.read((char *)&weaponInt, sizeof(weaponInt));
+            float weaponFloat;
+            File.read((char *)&weaponFloat, sizeof(weaponFloat));
 
-            char *name = new char[nameLen];
-            for (int i = 0; i < nameLen; i++)
-            {
-                File.read(&name[i], 1);
-            }
-            ship.name = name;
-            delete name;
-
-            File.read((char *)&ship.ship_class, 4);
-            File.read((char *)&ship.length, 2);
-            File.read((char *)&ship.shieldCapacity, 4);
-            File.read((char *)&ship.maxWarpSpeed, 4);
-
-            File.read((char *)&weaponCount, 4);
-            if (weaponCount > 0)
-            {
-                Inventory inventory;
-                for (int i = 0; i < weaponCount; i++)
-                {
-                    File.read((char *)&nameLen, 4);
-
-                    char *name = new char[nameLen];
-                    for (int i = 0; i < nameLen; i++)
-                    {
-                        File.read(&name[i], 1);
-                    }
-                    inventory.name = name;
-                    delete name;
-
-                    File.read((char *)&inventory.weaponInt, 4);
-                    File.read((char *)&inventory.weaponFloat, 4);
-
-                    ship.inventory.push_back(inventory);
-                }
-            }
-            ships.push_back(ship);
+            Ship::Weapons weapon = Ship::Weapons(weaponName, weaponInt, weaponFloat);
+            ships[counter].GetWeaponsList().push_back(weapon);
         }
-        File.close();
+        counter++;
     }
+    return counter;
 }
 
 void PrintAllShips(vector<Ship> &ships)
 {
     for (unsigned int i = 0; i < ships.size(); i++)
     {
-        DisplayShip(ships.at(i));
+        ships[i].DisplayShip();
     }
 }
 
 void PrintStrongestWeapon(vector<Ship> &ships)
 {
-    Ship strongestWeapon = ships.at(0);
+    int strongestPower = 0;
+    int index;
     for (unsigned int i = 0; i < ships.size(); i++)
     {
-        if (ships.at(i).inventory.at(i).weaponInt > strongestWeapon.inventory.at(i).weaponInt)
+        for (unsigned int j = 0; j < ships[i].GetWeaponsList().size(); j++)
         {
-            strongestWeapon = ships.at(i);
+            if (ships[i].GetWeaponsList()[j].powerRatingC > strongestPower)
+            {
+                strongestPower = ships[i].GetWeaponsList()[j].powerRatingC;
+                index = i;
+            }
         }
-        DisplayShip(strongestWeapon);
     }
+    ships[index].DisplayShip();
 }
 
 void PrintStrongestStarship(vector<Ship> &ships)
 {
-    Ship strongest = ships.at(0);
+    int strongest = 0;
+    int index;
     for (unsigned int i = 0; i < ships.size(); i++)
     {
-        if (ships.at(i).inventory.at(i).weaponInt > strongest.inventory.at(i).weaponInt)
+        if (ships[i].TotalPowerConsumption() > strongest)
         {
-            strongest = ships.at(i);
+            strongest = ships[i].TotalPowerConsumption();
+            index = i;
         }
-        DisplayShip(strongest);
     }
+    ships[index].DisplayShip();
 }
 
 void PrintWeakestShip(vector<Ship> &ships)
 {
-    Ship weakest = ships.at(0);
+    int weakest = ships[0].TotalPowerConsumption();
+    int index = 0;
     for (unsigned int i = 0; i < ships.size(); i++)
     {
-        if (ships.at(i).inventory.size() != 0)
+        if (ships[i].GetWeaponsList().size() != 0)
         {
-            if (ships.at(i).inventory.at(i).weaponInt < weakest.inventory.at(i).weaponInt)
+            if (ships[i].TotalPowerConsumption() < weakest)
             {
-                weakest = ships.at(i);
+                weakest = ships[i].TotalPowerConsumption();
+                index = i;
             }
         }
     }
-    DisplayShip(weakest);
+    ships[index].DisplayShip();
 }
 
 void PrintUnarmedShips(vector<Ship> &ships)
 {
     for (unsigned int i = 0; i < ships.size(); i++)
     {
-        if (ships.at(i).inventory.size() == 0)
+        if (ships[i].GetWeaponsList().size() == 0)
         {
-            DisplayShip(ships.at(i));
-        }
-        else
-        {
-            continue;
+            ships[i].DisplayShip();
         }
     }
 }
@@ -190,19 +147,20 @@ int main()
     cin >> option;
 
     // Make vector of ships
+    int counter = 0;
     vector<Ship> ships;
     /* Load files here */
     switch (option)
     {
     case 1:
-        LoadShipFile(ships, 1);
+        LoadShipFile(ships, "friendlyships.shp", counter);
         break;
     case 2:
-        LoadShipFile(ships, 2);
+        LoadShipFile(ships, "enemyships.shp", counter);
         break;
     case 3:
-        LoadShipFile(ships, 1);
-        LoadShipFile(ships, 2);
+        counter = LoadShipFile(ships, "friendlyships.shp", counter);
+        LoadShipFile(ships, "enemyships.shp", counter);
         break;
     default:
         break;
