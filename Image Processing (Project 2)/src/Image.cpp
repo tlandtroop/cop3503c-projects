@@ -131,6 +131,7 @@ void Image::setPixelVector(vector<Pixel> &vector)
     }
 }
 
+// Used to check if two images are the exact same
 bool Image::operator==(Image &other)
 {
     for (unsigned int i = 0; i < pixels.size(); i++)
