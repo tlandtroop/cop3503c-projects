@@ -10,6 +10,7 @@ class Shape
 public:
     virtual void Scale(float scaleFactor) = 0;
     virtual void Display() const = 0;
+    virtual ~Shape() {}
 };
 
 // Derived and Base Class
@@ -23,6 +24,8 @@ public:
     bool operator>(const Shape2D &rhs) const;
     bool operator<(const Shape2D &rhs) const;
     bool operator==(const Shape2D &rhs) const;
+
+    virtual ~Shape2D() {}
 };
 
 // Derived and Base Class
@@ -36,6 +39,8 @@ public:
     bool operator>(const Shape3D &rhs) const;
     bool operator<(const Shape3D &rhs) const;
     bool operator==(const Shape3D &rhs) const;
+
+    virtual ~Shape3D() {}
 };
 
 // Derived Class
@@ -44,10 +49,12 @@ class Square : public Shape2D
 public:
     Square();
     Square(float sideLength);
-    float Area();
+    float Area() const;
     string GetName2D() const;
     void Scale(float scaleFactor);
     void Display() const;
+
+    ~Square() {}
 
 private:
     float side;
@@ -59,10 +66,12 @@ class Triangle : public Shape2D
 public:
     Triangle();
     Triangle(float b, float h);
-    float Area();
+    float Area() const;
     string GetName2D() const;
     void Scale(float scaleFactor);
     void Display() const;
+
+    ~Triangle() {}
 
 private:
     float base;
@@ -75,10 +84,12 @@ class Circle : public Shape2D
 public:
     Circle();
     Circle(float r);
-    float Area();
+    float Area() const;
     string GetName2D() const;
     void Scale(float scaleFactor);
     void Display() const;
+
+    ~Circle() {}
 
 private:
     float radius;
@@ -90,10 +101,12 @@ class TriangularPyramid : public Shape3D, private Triangle
 public:
     TriangularPyramid();
     TriangularPyramid(float h, float baseLength, float baseHeight);
-    float Volume();
+    float Volume() const;
     string GetName3D() const;
     void Scale(float scaleFactor);
     void Display() const;
+
+    ~TriangularPyramid() {}
 
 private:
     float height;
@@ -105,10 +118,12 @@ class Cylinder : public Shape3D, private Circle
 public:
     Cylinder();
     Cylinder(float h, float radius);
-    float Volume();
+    float Volume() const;
     string GetName3D() const;
     void Scale(float scaleFactor);
     void Display() const;
+
+    ~Cylinder() {}
 
 private:
     float height;
@@ -120,10 +135,12 @@ class Sphere : public Shape3D, private Circle
 public:
     Sphere();
     Sphere(float r);
-    float Volume();
+    float Volume() const;
     string GetName3D() const;
     void Scale(float scaleFactor);
     void Display() const;
+
+    ~Sphere() {}
 
 private:
     float radius;
