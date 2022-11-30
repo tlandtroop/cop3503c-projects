@@ -1,20 +1,39 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <string>
 #include <random>
-#include <ctime>
+#include <sstream>
+
 using namespace std;
 
 mt19937 random_mt;
 
 class State
 {
-public:
     string name;
     int perCapitaIncome;
     int population;
     int medHouseholdIncome;
     int numOfHouseholds;
+
+public:
+    State(string _name, int _perCapitaIncome, int _population, int _medHouseholdIncome, int _numOfHouseholds)
+    {
+        name = _name;
+        perCapitaIncome = _perCapitaIncome;
+        population = _population;
+        medHouseholdIncome = _medHouseholdIncome;
+        numOfHouseholds = _numOfHouseholds;
+    }
+    void Print()
+    {
+        cout << name << endl;
+        cout << "Population: " << population << endl;
+        cout << "Per Capita Income: " << perCapitaIncome << endl;
+        cout << "Median Household Income: " << medHouseholdIncome << endl;
+        cout << "Number of Households: " << numOfHouseholds << endl;
+    }
 };
 
 int Random(int min, int max)
@@ -28,9 +47,9 @@ void RollDice(int numberOfRolls, int numberOfSides)
     map<int, int> rolls;
 
     //  Initialize the values in the pairs to 0
-    for (int i = 1; i < numberOfSides; i++)
+    for (int i = 1; i < numberOfSides + 1; i++)
     {
-        rolls.emplace(i, 0);
+        rolls[i] = 0;
     }
 
     // Generate a random number
@@ -78,19 +97,63 @@ int main()
     {
         // Load the states
         map<string, State> states;
-
-        ifstream File("./states.csv");
+        string name;
+        int perCapitaIncome;
+        int population;
+        int medianHouseholdIncome;
+        int numberOfHouseholds;
 
         string row;
+
+        ifstream File("states.csv");
         getline(File, row); // Reads the header
 
-        State state;
-        while (!File.eof()) // While not at the end of the csv file.
+        while (getline(File, row)) // While not at the end of the csv file.
         {
-            getline(File, row); // Reads each line of the file.
+            stringstream stream(row);
+            string data;
+            while (getline(stream, data, ','))
+            {
+                name = data;
+                getline(stream, data, ',');
+                perCapitaIncome = stoi(data);
+                getline(stream, data, ',');
+                population = stoi(data);
+                getline(stream, data, ',');
+                medianHouseholdIncome = stoi(data);
+                getline(stream, data, ',');
+                numberOfHouseholds = stoi(data);
+                State state(name, perCapitaIncome, population, medianHouseholdIncome, numberOfHouseholds);
+                states.emplace(name, state);
+            }
         }
+        int choice;
+        cout << "1. Print all states" << endl;
+        cout << "2. Search for a state" << endl;
+        cin >> choice;
 
-        // Get input for option 1 (show all states) or 2 (do a search for a particular state)
+        if (choice == 1)
+        {
+            map<string, State>::iterator iterator;
+            for (iterator = states.begin(); iterator != states.end(); iterator++)
+            {
+                iterator->second.Print();
+            }
+        }
+        else if (choice == 2)
+        {
+            string name;
+            cin >> name;
+
+            if (states.find(name) == states.end())
+            {
+                cout << "No match found for " << name << endl;
+            }
+            else
+            {
+                states.find(name)->second.Print();
+            }
+        }
     }
 
     return 0;
